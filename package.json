@@ -19,12 +19,12 @@
     "win": {
       "target": "nsis"
     },
-    "releaseType": "release",
     "publish": [
       {
         "provider": "github",
         "owner": "godninoff",
-        "repo": "dbd-stats-electron"
+        "repo": "dbd-stats-electron",
+        "releaseType": "release"
       }
     ]
   },
