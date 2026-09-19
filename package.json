@@ -5,7 +5,7 @@
   "main": "dist/main/main.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/godninoff/dbd-stats-desktop.git"
+    "url": "https://github.com/godninoff/dbd-stats-electron.git"
   },
   "scripts": {
     "dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && cross-env ELECTRON_RENDERER_URL=http://127.0.0.1:5173 electron .\"",
