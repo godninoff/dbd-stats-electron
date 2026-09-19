@@ -1,6 +1,6 @@
 {
   "name": "dbd-stats-desktop",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "private": true,
   "main": "dist/main/main.js",
   "repository": {
@@ -19,6 +19,7 @@
     "win": {
       "target": "nsis"
     },
+    "releaseType": "release",
     "publish": [
       {
         "provider": "github",
