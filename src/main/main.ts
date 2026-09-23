@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, safeStorage, session } from "electron";
+import { app, BrowserWindow, ipcMain, session } from "electron";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { getStats, prepareSteamLogin } from "./steam";
@@ -11,7 +11,10 @@ type Store = {
 
 let mainWindow: BrowserWindow | null = null;
 let steamWindow: BrowserWindow | null = null;
-let store: Store = { steamId: null, apiKey: null };
+let store: Store = {
+  steamId: null,
+  apiKey: null,
+};
 
 const storePath = () => path.join(app.getPath("userData"), "settings.json");
 
@@ -19,12 +22,16 @@ const loadStore = async () => {
   try {
     const raw = await fs.readFile(storePath(), "utf8");
     const parsed = JSON.parse(raw) as Partial<Store>;
+
     store = {
       steamId: parsed.steamId ?? null,
       apiKey: parsed.apiKey ?? null,
     };
   } catch {
-    store = { steamId: null, apiKey: null };
+    store = {
+      steamId: null,
+      apiKey: null,
+    };
   }
 };
 
@@ -48,8 +55,12 @@ const createWindow = () => {
   });
 
   const devUrl = process.env.ELECTRON_RENDERER_URL;
-  if (devUrl) void mainWindow.loadURL(devUrl);
-  else void mainWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
+
+  if (devUrl) {
+    void mainWindow.loadURL(devUrl);
+  } else {
+    void mainWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
+  }
 };
 
 ipcMain.handle("settings:get", () => ({
@@ -59,9 +70,14 @@ ipcMain.handle("settings:get", () => ({
 
 ipcMain.handle("settings:setApiKey", async (_event, apiKey: string) => {
   const value = String(apiKey ?? "").trim();
-  if (!value) throw new Error("API key is empty");
+
+  if (!value) {
+    throw new Error("API key is empty");
+  }
+
   store.apiKey = value;
   await saveStore();
+
   return { ok: true };
 });
 
@@ -86,32 +102,58 @@ ipcMain.handle("steam:login", async () => {
   void steamWindow.loadURL(loginUrl);
 
   const steamId = await resultPromise;
+
   store.steamId = steamId;
   await saveStore();
 
-  if (steamWindow && !steamWindow.isDestroyed()) steamWindow.close();
+  if (steamWindow && !steamWindow.isDestroyed()) {
+    steamWindow.close();
+  }
+
   steamWindow = null;
 
   return { steamId };
 });
 
 ipcMain.handle("stats:get", async () => {
-  if (!store.apiKey) throw new Error("Steam Web API key is not configured");
-  if (!store.steamId) throw new Error("Steam login required");
+  if (!store.apiKey) {
+    throw new Error("Steam Web API key is not configured");
+  }
+
+  if (!store.steamId) {
+    throw new Error("Steam login required");
+  }
+
   return getStats(store.apiKey, store.steamId);
+});
+
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
+
+autoUpdater.on("update-downloaded", () => {
+  autoUpdater.quitAndInstall();
+});
+
+autoUpdater.on("error", (error) => {
+  console.error("Auto update error:", error);
 });
 
 app.whenReady().then(async () => {
   await loadStore();
+
   session.defaultSession.setPermissionRequestHandler(
     (_webContents, _permission, callback) => callback(false),
   );
+
   createWindow();
+
   if (app.isPackaged) {
     void autoUpdater.checkForUpdatesAndNotify();
   }
 });
 
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
 });
